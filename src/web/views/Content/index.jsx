@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import classnames from 'classnames'
 import axios from 'axios'
 import _ from 'lodash'
-import Dropzone from 'react-dropzone'
 
 import List from './List'
 import Manage from './Manage'
@@ -27,9 +26,7 @@ export default class ContentView extends Component {
   componentDidMount() {
     this.fetchCategoryMessages(this.state.selectedId)
       .then(this.fetchCategories)
-      .then(() => {
-        return this.fetchSchema(this.state.selectedId)
-      })
+      .then(() => this.fetchSchema(this.state.selectedId))
       .then(() => {
         this.setState({
           loading: false
@@ -46,7 +43,7 @@ export default class ContentView extends Component {
 
       this.setState({
         categories: data,
-        count: count
+        count
       })
     })
 
@@ -55,7 +52,7 @@ export default class ContentView extends Component {
     const count = MESSAGES_PER_PAGE
 
     return axios
-      .get('/content/categories/' + id + '/items', {
+      .get(`/content/categories/${id}/items`, {
         params: { from: from, count: count, search: this.state.searchTerm }
       })
       .then(({ data }) => {
@@ -66,7 +63,7 @@ export default class ContentView extends Component {
   }
 
   fetchSchema(id) {
-    return axios.get('/content/categories/' + id + '/schema').then(({ data }) => {
+    return axios.get(`/content/categories/${id}/schema`).then(({ data }) => {
       this.setState({
         schema: data
       })
@@ -74,11 +71,11 @@ export default class ContentView extends Component {
   }
 
   createOrUpdateItem(data) {
-    let url = '/content/categories/' + this.state.selectedId + '/items'
+    let url = `/content/categories/${this.state.selectedId}/items`
 
     if (this.state.modifyId) {
       const categoryId = _.find(this.state.messages, { id: this.state.modifyId }).categoryId
-      url = '/content/categories/' + categoryId + '/items/' + this.state.modifyId
+      url = `/content/categories/${categoryId}/items/${this.state.modifyId}`
     }
 
     return axios.post(url, { formData: data }).then()
@@ -166,36 +163,6 @@ export default class ContentView extends Component {
     })
   }
 
-  handleUpload = () => {
-    this.dropzone.open()
-  }
-
-  handleDownload = () => {
-    const url = '/content/export'
-    window.open(url, '_blank')
-  }
-
-  handleDropFiles(acceptedFiles) {
-    const txt = `Upload will overwrite existing content if there is conflicting ID's.
-      Confirm the upload ${acceptedFiles.length} files?`
-
-    if (acceptedFiles.length > 0 && confirm(txt) == true) {
-      const formData = new FormData()
-      acceptedFiles.forEach(file => {
-        formData.append('files[]', file)
-      })
-      axios
-        .post('/content/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-        .then(() => {
-          this.fetchCategoryMessages(this.state.selectedId)
-        })
-    }
-  }
-
   handleSearch = input => {
     this.setState({
       searchTerm: input
@@ -211,10 +178,7 @@ export default class ContentView extends Component {
       return null
     }
 
-    const classNames = classnames({
-      [style.content]: true,
-      'bp-content': true
-    })
+    const classNames = classnames(style.content, 'bp-content')
 
     return (
       <ContentWrapper>
@@ -233,29 +197,19 @@ export default class ContentView extends Component {
                 />
               </td>
               <td style={{ width: '80%' }}>
-                <Dropzone
-                  accept="application/json"
-                  onDrop={this.handleDropFiles}
-                  style={{}}
-                  disableClick
-                  ref={node => (this.dropzone = node)}
-                >
-                  <Manage
-                    page={this.state.page}
-                    count={this.state.count}
-                    messagesPerPage={MESSAGES_PER_PAGE}
-                    messages={this.state.messages || []}
-                    searchTerm={this.state.searchTerm}
-                    handlePrevious={this.handlePrevious}
-                    handleNext={this.handleNext}
-                    handleRefresh={this.handleRefresh}
-                    handleModalShow={this.handleModalShow}
-                    handleDeleteSelected={this.handleDeleteSelected}
-                    handleUpload={this.handleUpload}
-                    handleDownload={this.handleDownload}
-                    handleSearch={this.handleSearch}
-                  />
-                </Dropzone>
+                <Manage
+                  page={this.state.page}
+                  count={this.state.count}
+                  messagesPerPage={MESSAGES_PER_PAGE}
+                  messages={this.state.messages || []}
+                  searchTerm={this.state.searchTerm}
+                  handlePrevious={this.handlePrevious}
+                  handleNext={this.handleNext}
+                  handleRefresh={this.handleRefresh}
+                  handleModalShow={this.handleModalShow}
+                  handleDeleteSelected={this.handleDeleteSelected}
+                  handleSearch={this.handleSearch}
+                />
               </td>
             </tr>
           </tbody>

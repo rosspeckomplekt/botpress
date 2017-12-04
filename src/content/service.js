@@ -18,10 +18,11 @@ const getShortUid = () =>
 module.exports = ({ db, botfile, projectLocation, logger }) => {
   let categories = []
 
+  const formDir = path.resolve(projectLocation, botfile.formsDir || './content/forms')
+  const formDataDir = path.resolve(projectLocation, botfile.formsDataDir || './content/forms_data')
+
   const scanAndRegisterCategories = async () => {
     categories = []
-
-    const formDir = path.resolve(projectLocation, botfile.formsDir || './content/forms')
 
     if (!fs.existsSync(formDir)) {
       return categories
@@ -230,51 +231,6 @@ module.exports = ({ db, botfile, projectLocation, logger }) => {
     return transformCategoryItem(items)
   }
 
-  const exportContent = async (ids = null) => {
-    const knex = await db.get()
-
-    let query = knex('content_items').select('*')
-
-    if (ids) {
-      query = query.whereIn('id', ids)
-    }
-
-    const items = query.then()
-
-    return items.map(item => transformCategoryItem(item))
-  }
-
-  const importContent = async documents => {
-    const knex = await db.get()
-
-    return Promise.mapSeries(documents, doc => {
-      if (!doc.id || !doc.formData || !doc.categoryId) {
-        throw new Error('Invalid data')
-      }
-
-      const row = {
-        data: JSON.stringify(doc.data),
-        formData: JSON.stringify(doc.formData),
-        metadata: '|' + doc.metadata.join('|') + '|',
-        previewText: doc.previewText,
-        created_by: 'admin',
-        created_on: helpers(knex).date.now(),
-        id: doc.id,
-        categoryId: doc.categoryId
-      }
-
-      return knex('content_items')
-        .insert(row)
-        .then()
-        .catch(err => {
-          return knex('content_items')
-            .where({ id: doc.id })
-            .update(row)
-            .then()
-        })
-    })
-  }
-
   return {
     scanAndRegisterCategories,
     listAvailableCategories,
@@ -285,9 +241,6 @@ module.exports = ({ db, botfile, projectLocation, logger }) => {
     deleteCategoryItems,
 
     getItem,
-    getItemsByMetadata,
-
-    exportContent,
-    importContent
+    getItemsByMetadata
   }
 }
