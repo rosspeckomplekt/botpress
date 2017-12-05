@@ -211,11 +211,7 @@ module.exports = (bp, app) => {
       req.params.id = null
     }
 
-    const from = req.query.from || 0
-    const count = req.query.count || 50
-    const searchTerm = req.query.search
-
-    res.send(await bp.contentManager.listCategoryItems(req.params.id, from, count, searchTerm))
+    res.send(await bp.contentManager.listCategoryItems(req.params.id))
   })
 
   app.secure('write', 'bot/content').post('/content/categories/:id/items', async (req, res) => {

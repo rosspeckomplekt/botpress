@@ -86,6 +86,8 @@ const collectArgs = (val, memo) => {
   return memo
 }
 
+const now = () => new Date().toISOString()
+
 module.exports = {
   print,
   resolveFromDir,
@@ -95,5 +97,6 @@ module.exports = {
   getDataLocation,
   npmCmd: NPM_CMD,
   getBotpressVersion,
-  collectArgs
+  collectArgs,
+  now
 }
